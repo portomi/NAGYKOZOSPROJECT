@@ -10,6 +10,14 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.use('pdf')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
+### TO DO ###
+# input_files = /path/to/inputdir
+# output_files = /path/to/outputdir
 
 #Ca traces to DataFrame
 def Ca2DF(Ca_traces, labels):
@@ -19,9 +27,11 @@ def Ca2DF(Ca_traces, labels):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
     
-"""Checks trace's significance.
-Gives back the DataFrame with significant traces only."""
 def Check_significance(Ca_traces, CI):
+    
+    """Checks trace's significance.
+    Gives back the DataFrame with significant traces only."""
+
     #treshold calculated from baseline data according to confidence interval
     threshold = threshold_data['ROIs']['transients']['parameters']['thresholds_p'+str(CI)][5]
     for i in range(3599):
@@ -64,5 +74,12 @@ Correlation = pd.DataFrame(ssc.fit_transform(Correlation))
 distance_matrix = pd.DataFrame(ssc.transform(pd.read_csv('Distance_matrix.csv').set_index('Unnamed: 0')))
 dist = Correlation.corrwith(distance_matrix)
 
+# output_files
+
+pp = PdfPages('corr_dist_mtx.pdf')
+fig = plt.figure()
 plt.plot(dist)
+plt.show()
+fig.savefig(pp, format='pdf')
+pp.close()
 

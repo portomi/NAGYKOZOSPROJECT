@@ -8,12 +8,13 @@ Created on Mon May 28 00:01:16 2018
 import pickle
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
+#from sklearn.preprocessing import StandardScaler
 import matplotlib as mpl
 mpl.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import itertools
+from scipy.stats.stats import pearsonr
 
 ### TO DO ###
 # input_files = /path/to/inputdir
@@ -26,21 +27,6 @@ def Ca2DF(Ca_traces, labels):
         for j in range(3599):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
-    
-def Check_significance(Ca_traces, CI):
-    
-    """Checks trace's significance.
-    Gives back the DataFrame with significant traces only."""
-
-    #treshold calculated from baseline data according to confidence interval
-    threshold = threshold_data['ROIs']['transients']['parameters']['thresholds_p'+str(CI)][5]
-    for i in range(3599):
-        for j in range(84):
-            if Ca_traces.iat[i, j]<threshold:
-                Ca_traces.iat[i, j] = 0
-    return(Ca_traces)
-                
-                
     
 #load the pickles
 data = pickle.load(open('dFoF_0.pkl', 'rb')) #data for Ca signals
@@ -59,16 +45,30 @@ conf_iv = 0.01
 #Ca traces to DataFrame
 Ca_traces = np.array(data['ROIs']['traces'])
 Ca_traces = Ca2DF(Ca_traces, labels)
-
-#Ca_traces with significant value
-Ca_traces = Check_significance(Ca_traces, conf_iv)
 #Ca_traces.to_csv("Ca_signals.csv", encoding="ascii")
 
 
-#calculate correlation between columns
-Correlation = Ca_traces.corr()
+"""Calculating correlations
+    where
+        PCC is Pearson's Correlation Coefficient
+    and
+        p-value roughly indicates the probability of an uncorrelated system
+        producing datasets that have a Pearson correlation at least as extreme
+        as the one computed from these datasets
+    """
+correlations = {}
+columns = Ca_traces.columns.tolist()
 
-#calculate correllation betwen the calculated correlations and data in distance matrix
+for col_a, col_b in itertools.combinations(columns, 2):
+    correlations[col_a + '__' + col_b] = pearsonr(Ca_traces.loc[:, col_a], Ca_traces.loc[:, col_b])
+
+result = pd.DataFrame.from_dict(correlations, orient='index')
+result.columns = ['PCC', 'p-value']
+
+print(result.sort_index())
+
+"""
+#calculate correllation between the calculated correlations and data in distance matrix
 ssc = StandardScaler()
 Correlation = pd.DataFrame(ssc.fit_transform(Correlation))
 distance_matrix = pd.DataFrame(ssc.transform(pd.read_csv('Distance_matrix.csv').set_index('Unnamed: 0')))
@@ -82,4 +82,4 @@ plt.plot(dist)
 plt.show()
 fig.savefig(pp, format='pdf')
 pp.close()
-
+"""

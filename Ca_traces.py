@@ -68,6 +68,10 @@ result.columns = ['PCC', 'p-value']
 
 print(result.sort_index())
 
+#Ez mi ez? És miért add 167 sor eredményt?
+for col in range(len(Ca_traces.columns)):
+   correlations2 = np.correlate(Ca_traces.loc[col], Ca_traces.loc[col+1], mode='full')
+
 """
 #calculate correllation between the calculated correlations and data in distance matrix
 ssc = StandardScaler()

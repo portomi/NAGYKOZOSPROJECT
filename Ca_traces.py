@@ -4,6 +4,9 @@ Created on Mon May 28 00:01:16 2018
 
 @author: tamas_000
 """
+import this
+
+
 
 import pickle
 import pandas as pd

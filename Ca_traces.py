@@ -22,9 +22,10 @@ from scipy.stats.stats import pearsonr
 
 #Ca traces to DataFrame
 def Ca2DF(Ca_traces, labels):
-    Ca_traces_2D=np.zeros(shape=(84, 3599)) #This is to reduce dimensionality
-    for i in range(84):
-        for j in range(3599):
+    dims = map(int, Ca_traces.shape)[:-1]
+    Ca_traces_2D=np.zeros(dims) #This is to reduce dimensionality
+    for i in range(dims[0]):
+        for j in range(dims[1])
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
     

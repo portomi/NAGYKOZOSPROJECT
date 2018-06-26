@@ -4,9 +4,6 @@ Created on Mon May 28 00:01:16 2018
 
 @author: tamas_000
 """
-import this
-
-
 
 import pickle
 import pandas as pd
@@ -69,7 +66,8 @@ for col_a, col_b in itertools.combinations(columns, 2):
 result = pd.DataFrame.from_dict(correlations, orient='index')
 result.columns = ['PCC', 'p-value']
 
-print(result.sort_index())
+print(result.sort_values('PCC'))
+plt.pcolormesh(result)
 
 #Ez mi ez? És miért add 167 sor eredményt?
 for col in range(len(Ca_traces.columns)):

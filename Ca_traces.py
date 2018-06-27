@@ -68,7 +68,8 @@ Ca_traces = Check_significance(Ca_traces, conf_iv)
 #calculate correlation between columns
 Correlation = Ca_traces.corr()
 
-#calculate correllation betwen the calculated correlations and data in distance matrix
+#calculate correllation betwen the calculated correlations
+# and data in distance matrix
 ssc = StandardScaler()
 Correlation = pd.DataFrame(ssc.fit_transform(Correlation))
 distance_matrix = pd.DataFrame(ssc.transform(pd.read_csv('Distance_matrix.csv').set_index('Unnamed: 0')))

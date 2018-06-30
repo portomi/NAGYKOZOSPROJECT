@@ -12,8 +12,8 @@ import pickle
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 
-data = pickle.load(open('rois.pkl', 'rb'))
-
+with open('rois.pkl', 'rb') as f:
+    data = pickle.load(f)
 
 #Calculates centroid of each individual polygon
 def Centroid(poly):

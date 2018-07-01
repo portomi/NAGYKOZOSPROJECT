@@ -29,10 +29,13 @@ def Ca2DF(Ca_traces, labels):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
     
-#load the pickles
-data = pickle.load(open('dFoF_0.pkl', 'rb')) #data for Ca signals
-threshold_data = pickle.load(open('transients_0.pkl', 'rb')) #data for thresholds ie. noise
-cell_data = pickle.load(open('rois.pkl', 'rb')) #data for IDs of cells
+"""load the pickles"""
+with open('dFoF_0.pkl', 'rb') as f:
+    data = pickle.load(f) #data for Ca signals
+with open('transients_0.pkl', 'rb') as g:
+    threshold_data = pickle.load(g) #data for thresholds ie. noise
+with open('rois.pkl', 'rb') as h:
+    cell_data = pickle.load(h) #data for IDs of cells
 
 #cell IDs from cell_data
 labels = []

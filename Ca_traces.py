@@ -15,19 +15,26 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import itertools
 from scipy.stats.stats import pearsonr
+from scipy.spatial.distance import pdist
 
 ### TO DO ###
 # input_files = /path/to/inputdir
 # output_files = /path/to/outputdir
 
-#Ca traces to DataFrame
 def Ca2DF(Ca_traces, labels):
+    """Ca traces to DataFrame"""
     dims = map(int, Ca_traces.shape)[:-1]
     Ca_traces_2D=np.zeros(dims) #This is to reduce dimensionality
     for i in range(dims[0]):
         for j in range(dims[1])
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
+
+def Centroid(poly):
+    """Calculates centroid of each individual polygon"""
+    poly = pd.DataFrame(poly)
+    return poly.mean(axis = 0).tolist()
+    
     
 """load the pickles"""
 with open('dFoF_0.pkl', 'rb') as f:
@@ -37,20 +44,36 @@ with open('transients_0.pkl', 'rb') as g:
 with open('rois.pkl', 'rb') as h:
     cell_data = pickle.load(h) #data for IDs of cells
 
-#cell IDs from cell_data
-labels = []
-for x in range(len(cell_data['ROIs']['rois'])):
-    labels.append(str(cell_data['ROIs']['rois'][x]['label']))
-    
-#decide confidence interval
-conf_iv = 0.01
-#conf_iv = 0.05
+centroids = [] # list for ROI centroids
+labels = [] # list for labels of ROIs
 
-#Ca traces to DataFrame
+"""Iterate data to calculate each centroid and store it in "centroids" list"""
+for i in range(len(cell_data['ROIs']['rois'])):
+    #polygons is a 1 element array so [0] after ['polygons'] should stay 0
+    centroids.append(Centroid(cell_data['ROIs']['rois'][i]['polygons'][0]))
+    labels.append(str(cell_data['ROIs']['rois'][i]['id']))
+
+"""convert to Dataframe with ROI labels as indexes"""
+centroids = pd.DataFrame(centroids)
+centroids.insert(loc=0, column='label', value=labels)
+centroids.set_index('label')
+centroids.columns = ['label', 'x', 'y', 'z']
+
+"""sets distance of 'z' according to the measurement plane distances"""
+centroids.loc[centroids['z']==1, 'z'] = 12.5
+centroids.loc[centroids['z']==2, 'z'] = 25
+
+"""create distance matrics"""
+distances = pdist(centroids.values[:,1:4], metric='euclidean')
+indexes = []
+for elements in itertools.combinations(labels, 2):
+    indexes.append(elements[0] + '__' + elements[1])
+distances = pd.DataFrame(distances, index=indexes,
+                         columns = ['distance'])   
+    
+"""Ca traces to DataFrame"""
 Ca_traces = np.array(data['ROIs']['traces'])
 Ca_traces = Ca2DF(Ca_traces, labels)
-#Ca_traces.to_csv("Ca_signals.csv", encoding="ascii")
-
 
 """Calculating correlations
     where
@@ -69,20 +92,12 @@ for col_a, col_b in itertools.combinations(columns, 2):
 result = pd.DataFrame.from_dict(correlations, orient='index')
 result.columns = ['PCC', 'p-value']
 
-print(result.sort_values('PCC'))
+result = pd.concat([result, distances], axis=1) # puts distances in Ca_traces result DataFrame
+
+result.sort_values('PCC')
 plt.pcolormesh(result)
 
-#Ez mi ez? És miért add 167 sor eredményt?
-for col in range(len(Ca_traces.columns)):
-   correlations2 = np.correlate(Ca_traces.loc[col], Ca_traces.loc[col+1], mode='full')
 
-"""
-#calculate correllation between the calculated correlations and data in distance matrix
->>>>>>> 7f4b1b7908cadb71d8577cfcf84b0036834c8de5
-ssc = StandardScaler()
-Correlation = pd.DataFrame(ssc.fit_transform(Correlation))
-distance_matrix = pd.DataFrame(ssc.transform(pd.read_csv('Distance_matrix.csv').set_index('Unnamed: 0')))
-dist = Correlation.corrwith(distance_matrix)
 
 # output_files
 

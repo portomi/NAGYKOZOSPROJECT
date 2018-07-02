@@ -36,7 +36,9 @@ centroids.loc[centroids['z']==1, 'z'] = 12.5
 centroids.loc[centroids['z']==2, 'z'] = 25
 
 """create distance matrics"""
-distances = pdist(centroids.values[:,1:4], metric='euclidean')
-distances = pd.DataFrame(distances, index=list(itertools.combinations(labels, 2)),
+indexes = []
+for elements in itertools.combinations(labels, 2):
+    indexes.append(elements[0] + '_' + elements[1])
+distances = pd.DataFrame(distances, index=indexes,
                          columns = ['distance'])
-distances.sort_values('distance')
+distances.sort_index(inplace=True)

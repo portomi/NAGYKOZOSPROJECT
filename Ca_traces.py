@@ -94,8 +94,13 @@ result.columns = ['PCC', 'p-value']
 
 result = pd.concat([result, distances], axis=1) # puts distances in Ca_traces result DataFrame
 
-result.sort_values('PCC')
-plt.pcolormesh(result)
+result = result.sort_values('PCC')
+print(result)
+#plt.pcolormesh(result)
+plt.plot(result['PCC'], result['distance'], c='red', marker='*')
+plt.xlabel('Pearsonr correlation')
+plt.ylabel('Eucledian distance in um')
+plt.show()
 
 
 

@@ -5,7 +5,7 @@ Created on Mon May 28 00:01:16 2018
 @author: tamas_000
 """
 
-import pickle
+import pickle as pkl
 import pandas as pd
 import numpy as np
 #from sklearn.preprocessing import StandardScaler
@@ -15,18 +15,28 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import itertools
 from scipy.stats.stats import pearsonr
+<<<<<<< Updated upstream
 from scipy.spatial.distance import pdist
 
 ### TO DO ###
 # input_files = /path/to/inputdir
 # output_files = /path/to/outputdir
 
+#%%
+### TO DO ###
+# input_files = /path/to/inputdir
+# output_files = /path/to/outputdir
+#%%
+#Ca traces to DataFrame
 def Ca2DF(Ca_traces, labels):
-    """Ca traces to DataFrame"""
+    
+    '''Ca_traces: 3-d numpy array; labels: list of strings
+    returns pandas DataFrame, one cell per column'''
+    
     dims = map(int, Ca_traces.shape)[:-1]
     Ca_traces_2D=np.zeros(dims) #This is to reduce dimensionality
     for i in range(dims[0]):
-        for j in range(dims[1])
+        for j in range(dims[1]):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
 
@@ -75,6 +85,55 @@ distances = pd.DataFrame(distances, index=indexes,
 Ca_traces = np.array(data['ROIs']['traces'])
 Ca_traces = Ca2DF(Ca_traces, labels)
 
+#%%
+def calcCorrs(df, groupbycols=None, xcol=None, ycol=None):
+    """Calculates crosscorrelation values between two np.array 
+    and returns them as pandas dataframe"""
+    
+    groups = df.groupby(groupbycols)
+    
+    result = dict()
+    result["g1"]= []
+    result["g2"]= []
+    result["corrValue"] = []
+    
+    for key1, group1 in groups:
+        g1 = group1.sort_values(xcol)
+        g1Data = np.array(g1[ycol])
+        g1Mask = np.isnan(g1Data)
+        for key2, group2 in groups:
+            g2 = group2.sort_values(xcol)
+            g2Data = np.array(g2[ycol])
+            g2Mask = np.isnan(g2Data)
+            
+            mask = g1Mask | g2Mask
+            
+            corrval=sp.stats.pearsonr(g1Data[~mask], g2Data[~mask])[0]
+            result["g1"].append(key1)
+            result["g2"].append(key2)
+            result["corrValue"].append(corrval)
+            
+    return pd.DataFrame(result)
+#%%    
+def getCellID(data):
+    """takes dictionary, returns pandas dataframe""" 
+#cell IDs from cell_data
+    labels = []
+    for x in range(len(cell_data['ROIs']['rois'])):
+        labels.append(str(cell_data['ROIs']['rois'][x]['label']))
+        return pd.DataFrame(labels)
+    
+#%%   
+#decide confidence interval, i don't think we need this
+conf_iv = 0.01
+#conf_iv = 0.05
+#%%
+#Ca traces to DataFrame
+Ca_traces = np.array(data['ROIs']['traces'])
+Ca_traces = Ca2DF(Ca_traces, labels)
+#Ca_traces.to_csv("Ca_signals.csv", encoding="ascii")
+
+#%%
 """Calculating correlations
     where
         PCC is Pearson's Correlation Coefficient
@@ -103,6 +162,14 @@ plt.ylabel('Eucledian distance in um')
 plt.show()
 
 
+
+"""
+#calculate correllation between the calculated correlations and data in distance matrix
+ssc = StandardScaler()
+Correlation = pd.DataFrame(ssc.fit_transform(Correlation))
+distance_matrix = pd.DataFrame(ssc.transform(pd.read_csv('Distance_matrix.csv').set_index('Unnamed: 0')))
+dist = Correlation.corrwith(distance_matrix)
+>>>>>>> Stashed changes
 
 # output_files
 

@@ -26,7 +26,7 @@ def Ca2DF(Ca_traces, labels):
     dims = map(int, Ca_traces.shape)[:-1]
     Ca_traces_2D=np.zeros(dims) #This is to reduce dimensionality
     for i in range(dims[0]):
-        for j in range(dims[1])
+        for j in range(dims[1]):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
 
@@ -112,4 +112,3 @@ plt.plot(dist)
 plt.show()
 fig.savefig(pp, format='pdf')
 pp.close()
-"""

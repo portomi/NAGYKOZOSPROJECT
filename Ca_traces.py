@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import itertools
 from scipy.stats.stats import pearsonr
-<<<<<<< Updated upstream
 from scipy.spatial.distance import pdist
 
 ### TO DO ###
@@ -39,30 +38,32 @@ def Ca2DF(Ca_traces, labels):
         for j in range(dims[1]):
             Ca_traces_2D[i][j] = Ca_traces[i][j][0]
     return(pd.DataFrame(Ca_traces_2D.T, columns=labels))
-
+#%%
 def Centroid(poly):
     """Calculates centroid of each individual polygon"""
     poly = pd.DataFrame(poly)
     return poly.mean(axis = 0).tolist()
     
-    
-"""load the pickles"""
+#%%    
+"""load data from pickle"""
 with open('dFoF_0.pkl', 'rb') as f:
-    data = pickle.load(f) #data for Ca signals
-with open('transients_0.pkl', 'rb') as g:
-    threshold_data = pickle.load(g) #data for thresholds ie. noise
+    data = pkl.load(f) #data for Ca signals
+
+# with open('transients_0.pkl', 'rb') as g:
+#     threshold_data = pickle.load(g) #data for thresholds ie. noise
+
 with open('rois.pkl', 'rb') as h:
-    cell_data = pickle.load(h) #data for IDs of cells
+    cell_data = pkl.load(h) #data for IDs of cells
 
-centroids = [] # list for ROI centroids
-labels = [] # list for labels of ROIs
-
+centroids = list() # list for ROI centroids
+labels = list() # list for labels of ROIs
+#%%
 """Iterate data to calculate each centroid and store it in "centroids" list"""
 for i in range(len(cell_data['ROIs']['rois'])):
     #polygons is a 1 element array so [0] after ['polygons'] should stay 0
     centroids.append(Centroid(cell_data['ROIs']['rois'][i]['polygons'][0]))
     labels.append(str(cell_data['ROIs']['rois'][i]['id']))
-
+#%%
 """convert to Dataframe with ROI labels as indexes"""
 centroids = pd.DataFrame(centroids)
 centroids.insert(loc=0, column='label', value=labels)
@@ -73,7 +74,7 @@ centroids.columns = ['label', 'x', 'y', 'z']
 centroids.loc[centroids['z']==1, 'z'] = 12.5
 centroids.loc[centroids['z']==2, 'z'] = 25
 
-"""create distance matrics"""
+"""create distance matrices"""
 distances = pdist(centroids.values[:,1:4], metric='euclidean')
 indexes = []
 for elements in itertools.combinations(labels, 2):
@@ -86,6 +87,7 @@ Ca_traces = np.array(data['ROIs']['traces'])
 Ca_traces = Ca2DF(Ca_traces, labels)
 
 #%%
+#this is temp. don't run
 def calcCorrs(df, groupbycols=None, xcol=None, ycol=None):
     """Calculates crosscorrelation values between two np.array 
     and returns them as pandas dataframe"""
@@ -146,7 +148,8 @@ correlations = {}
 columns = Ca_traces.columns.tolist()
 
 for col_a, col_b in itertools.combinations(columns, 2):
-    correlations[col_a + '__' + col_b] = pearsonr(Ca_traces.loc[:, col_a], Ca_traces.loc[:, col_b])
+    correlations[col_a + '__' + col_b] = pearsonr( \
+            Ca_traces.loc[:, col_a], Ca_traces.loc[:, col_b])
 
 result = pd.DataFrame.from_dict(correlations, orient='index')
 result.columns = ['PCC', 'p-value']
@@ -155,13 +158,17 @@ result = pd.concat([result, distances], axis=1) # puts distances in Ca_traces re
 
 result = result.sort_values('PCC')
 print(result)
+#%%
+
 #plt.pcolormesh(result)
-plt.plot(result['PCC'], result['distance'], c='red', marker='*')
+plt.scatter(result['PCC'], result['distance'], c='red', marker='*')
 plt.xlabel('Pearsonr correlation')
 plt.ylabel('Eucledian distance in um')
 plt.show()
 
-
+#%%
+plt.plot(result['PCC'], c='gray')
+plt.show()
 
 """
 #calculate correllation between the calculated correlations and data in distance matrix
